@@ -5,7 +5,7 @@ setup() {
   # get directory of this file, no matter where it is run
   # do not use ${BASH_SOURCE[0]} or $0
   DIR="$( cd "$( dirname "${BATS_TEST_FILENAME}" )" >/dev/null 2>&1 && pwd )"
-  PATH="${DIR}/../src:${PATH}"
+  PATH="${DIR}/..:${PATH}"
 }
 
 
