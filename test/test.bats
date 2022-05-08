@@ -4,6 +4,7 @@
 setup() {
   load 'test_helper/bats-support/load'
   load 'test_helper/bats-file/load'
+  load 'test_helper/bats-assert/load'
 
   # get directory of this file, no matter where it is run
   # do not use ${BASH_SOURCE[0]} or $0
@@ -15,4 +16,7 @@ setup() {
 @test "can run the script" {
   assert_file_exists git_sync
   assert_file_executable git_sync
+
+  run git_sync
+  assert_failure
 }
