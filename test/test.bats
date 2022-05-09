@@ -13,10 +13,11 @@ setup() {
 }
 
 
-@test "can run the script" {
+@test "print usage and fail when run without options" {
   assert_file_exists git_sync
   assert_file_executable git_sync
 
   run git_sync
+  assert_output --partial "Usage:"
   assert_failure
 }

@@ -1,4 +1,19 @@
 #!/bin/bash
 
-echo "Not implemented" >&2
-exit 1
+error() {
+  echo "Error: $1" >&2
+  exit 1
+}
+
+usage() {
+  local usage_string
+  usage_string="Usage: git_sync [OPTIONS]"
+  echo "${usage_string}"
+}
+
+main() {
+  usage
+  error "Not implemented"
+}
+
+main "$@"
