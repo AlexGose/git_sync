@@ -9,8 +9,21 @@ usage() {
   local usage_string
   usage_string="Usage: git_sync OPTIONS
   OPTIONS
-  -h                    Display this help message"
+  -h                    Display this help message
+  -f                    Fetch changes"
   echo "${usage_string}"
+}
+
+fetch() {
+  local current_dir
+  current_dir="$(pwd)"
+  if (( $# == 0 )) || ! cd "$1"; then
+    error "Bad directory name: $1"
+  fi
+  if ! git fetch; then
+    cd "${current_dir}"
+    error "Unable to fetch changes in directory: $1"
+  fi
 }
 
 main() {
@@ -18,12 +31,20 @@ main() {
       usage
       error "git_sync requires at least one option"
   fi
-  while getopts :h opt; do
+  local fetch_flag
+  fetch_flag="false"
+  local repo_dir
+  repo_dir="$(pwd)"
+  while getopts :hf opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
+      f) fetch_flag="true" ;;
       *) error "Unkown option: ${opt}" ;;
     esac
   done
+  if [[ "${fetch_flag}" == "true" ]]; then
+    fetch "${repo_dir}"
+  fi
 }
 
 main "$@"

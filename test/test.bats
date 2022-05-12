@@ -10,6 +10,48 @@ setup() {
   # do not use ${BASH_SOURCE[0]} or $0
   DIR="$( cd "$( dirname "${BATS_TEST_FILENAME}" )" >/dev/null 2>&1 && pwd )"
   PATH="${DIR}/..:${PATH}"
+
+  TEMP_TEST_DIR="$(mktemp -d /tmp/git_sync_test_XXXXX)"
+  
+  local work_dir
+  work_dir="${PWD}"
+
+  cd "${TEMP_TEST_DIR}"
+  git init --bare test.git
+
+  mkdir test1 test2
+
+  git clone test.git test2 2>/dev/null
+  cd test2
+
+  # config required to commit
+  git config user.email "tester@example.com"
+  git config user.name "tester"
+
+  echo "hello world" > test_file.txt
+  git add .
+  git commit -m "Add text file"
+  git push origin master
+
+  cd ..
+  git clone test.git test1 2>/dev/null
+  cd test1
+  
+  git config user.email "tester@example.com"
+  git config user.name "tester"
+  
+  echo "another line" >> test_file.txt
+  git add .
+  git commit -m "Add a line to the file"
+  git push origin master
+  
+  cd "${work_dir}"
+}
+
+teardown() {
+  rm -rf "${TEMP_TEST_DIR}/test1"
+  rm -rf "${TEMP_TEST_DIR}/test2"
+  rm -rf "${TEMP_TEST_DIR}/test.git"
 }
 
 @test "print usage and fail when run without options" {
@@ -26,4 +68,14 @@ setup() {
   assert_success
   assert_output --partial "Usage:"
   assert_output --partial "-h"
+}
+
+@test "master branch is behind origin after fetch" {
+  local work_dir
+  work_dir="${PWD}"
+  cd "${TEMP_TEST_DIR}/test2"
+  run git_sync -f
+  assert_success
+  [ "$(git rev-parse master)" != "$(git rev-parse origin/master)" ]
+  cd "${work_dir}"
 }
