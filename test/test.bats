@@ -12,7 +12,6 @@ setup() {
   PATH="${DIR}/..:${PATH}"
 }
 
-
 @test "print usage and fail when run without options" {
   assert_file_exists git_sync
   assert_file_executable git_sync
@@ -20,4 +19,11 @@ setup() {
   run git_sync
   assert_output --partial "Usage:"
   assert_failure
+}
+
+@test "print usage with \"-h\" option" {
+  run git_sync -h
+  assert_success
+  assert_output --partial "Usage:"
+  assert_output --partial "-h"
 }

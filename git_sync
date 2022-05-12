@@ -7,13 +7,23 @@ error() {
 
 usage() {
   local usage_string
-  usage_string="Usage: git_sync [OPTIONS]"
+  usage_string="Usage: git_sync OPTIONS
+  OPTIONS
+  -h                    Display this help message"
   echo "${usage_string}"
 }
 
 main() {
-  usage
-  error "Not implemented"
+  if (( $# == 0 )); then
+      usage
+      error "git_sync requires at least one option"
+  fi
+  while getopts :h opt; do
+    case "${opt}" in
+      h) usage; exit 0 ;;
+      *) error "Unkown option: ${opt}" ;;
+    esac
+  done
 }
 
 main "$@"
