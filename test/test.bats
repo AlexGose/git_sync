@@ -79,3 +79,14 @@ teardown() {
   [ "$(git rev-parse master)" != "$(git rev-parse origin/master)" ]
   cd "${work_dir}"
 }
+
+@test "master branch behind origin after fetch with \"-d\" option" {
+  run git_sync -f -d "${TEMP_TEST_DIR}/test2"
+  assert_success
+  
+  local work_dir
+  work_dir="${PWD}"
+  cd "${TEMP_TEST_DIR}/test2"
+  [ "$(git rev-parse master)" != "$(git rev-parse origin/master)" ]
+  cd "${work_dir}"
+}

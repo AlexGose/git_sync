@@ -10,7 +10,8 @@ usage() {
   usage_string="Usage: git_sync OPTIONS
   OPTIONS
   -h                    Display this help message
-  -f                    Fetch changes"
+  -f                    Fetch changes in the Git repository
+  -d PATH               Path to the directory of the Git repository"
   echo "${usage_string}"
 }
 
@@ -31,17 +32,21 @@ main() {
       usage
       error "git_sync requires at least one option"
   fi
+  
   local fetch_flag
   fetch_flag="false"
   local repo_dir
   repo_dir="$(pwd)"
-  while getopts :hf opt; do
+  
+  while getopts :hfd: opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       f) fetch_flag="true" ;;
+      d) repo_dir="${OPTARG}" ;;
       *) error "Unkown option: ${opt}" ;;
     esac
   done
+  
   if [[ "${fetch_flag}" == "true" ]]; then
     fetch "${repo_dir}"
   fi
