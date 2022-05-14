@@ -90,3 +90,26 @@ teardown() {
   [ "$(git rev-parse master)" != "$(git rev-parse origin/master)" ]
   cd "${work_dir}"
 }
+
+@test "master branch updated after pull with \"-p\" option" {
+  local work_dir
+  work_dir="${PWD}"
+  cd "${TEMP_TEST_DIR}/test2"
+  local hash_local
+  hash_local="$(git rev-parse master)"
+  #echo "# hash_local=${hash_local}" >&3
+  local hash_remote
+  hash_remote="$(git rev-parse origin/master)"
+  #echo "# hash_remote=${hash_remote}" >&3
+  run git_sync -p
+  assert_success
+  #echo "# hash_local=$(git rev-parse master)" >&3
+  #echo "# hash_remote=$(git rev-parse origin/master)" >&3
+
+  [ "$(git rev-parse master)" != "${hash_local}" ]
+  [ "$(git rev-parse master)" != "${hash_remote}" ]
+  [ "$(git rev-parse origin/master)" != "${hash_local}" ]
+  [ "$(git rev-parse origin/master)" != "${hash_remote}" ]
+  [ "$(git rev-parse master)" == "$(git rev-parse origin/master)" ]
+  cd "${work_dir}"
+}

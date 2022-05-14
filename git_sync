@@ -15,15 +15,31 @@ usage() {
   echo "${usage_string}"
 }
 
-fetch() {
+# Execute a Git command in the given repository
+# Usage: run_git_command <command> <path to repository>
+# Inputs: 
+#     <command> - Git command ("fetch" or "pull")
+#     <path to repository> - path to the local Git repository
+# Modifies the local Git repository located at <path to repository>.
+# When <command> is "fetch", the command "git fetch" will be run. When
+# <command> is "pull" the command "get pull" will be run.
+run_git_command() {
   local current_dir
   current_dir="$(pwd)"
-  if (( $# == 0 )) || ! cd "$1"; then
-    error "Bad directory name: $1"
+  if (( $# < 2 )); then
+    error "Too few arguments: $@"
   fi
-  if ! git fetch; then
-    cd "${current_dir}"
-    error "Unable to fetch changes in directory: $1"
+  if ! cd "$2"; then
+    error "Bad directory name: $2"
+  fi
+  
+  if [[ "$1" == "fetch" || "$1" == "pull" ]]; then
+    if ! git "$1"; then
+      cd "${current_dir}"
+      error "Unable to execute Git command in directory: $2"
+    fi
+  else
+    error "Unsupported Git command: $1"
   fi
 }
 
@@ -35,20 +51,26 @@ main() {
   
   local fetch_flag
   fetch_flag="false"
+  local pull_flag
+  pull_flag="false"
   local repo_dir
   repo_dir="$(pwd)"
   
-  while getopts :hfd: opt; do
+  while getopts :hfpd: opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       f) fetch_flag="true" ;;
+      p) pull_flag="true" ;;
       d) repo_dir="${OPTARG}" ;;
       *) error "Unkown option: ${opt}" ;;
     esac
   done
   
   if [[ "${fetch_flag}" == "true" ]]; then
-    fetch "${repo_dir}"
+    run_git_command fetch "${repo_dir}"
+  fi
+  if [[ "${pull_flag}" == "true" ]]; then
+    run_git_command pull "${repo_dir}"
   fi
 }
 
