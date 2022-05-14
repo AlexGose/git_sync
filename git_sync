@@ -1,5 +1,8 @@
 #!/bin/bash
 
+declare -rx GIT_SYNC_TIME_DIR
+declare -rx GIT_SYNC_TIME_FILE
+
 error() {
   echo "Error: $1" >&2
   exit 1
@@ -10,30 +13,81 @@ usage() {
   usage_string="Usage: git_sync OPTIONS
   OPTIONS
   -h                    Display this help message
-  -f                    Fetch changes in the Git repository
+  -f                    Fetch changes in the remote Git repository origin
+  -p                    Pull changes from the remote Git repository origin
+  -s                    Stage any unstaged changes
   -d PATH               Path to the directory of the Git repository"
   echo "${usage_string}"
+}
+
+make_new_time_file() {
+  local time_dir
+  if [[ -z "${GIT_SYNC_TIME_DIR}" ]]; then
+    time_dir="."
+  else
+    time_dir="${GIT_SYNC_TIME_DIR}"
+  fi
+
+  local time_file
+  if [[ -z "${GIT_SYNC_TIME_FILE}" ]]; then
+    time_file=".git_sync_last_staged_time"
+  else
+    time_file="${GIT_SYNC_TIME_FILE}"
+  fi
+
+  if ! date "+%s" > "${time_dir}/${time_file}"; then
+    error "Unable to create or modify time file: ${time_file}"
+  fi
 }
 
 # Execute a Git command in the given repository
 # Usage: run_git_command <command> <path to repository>
 # Inputs: 
-#     <command> - Git command ("fetch" or "pull")
+#     <command> - Git command ("fetch", "pull", "ls-untracked", etc.)
 #     <path to repository> - path to the local Git repository
 # Modifies the local Git repository located at <path to repository>.
-# When <command> is "fetch", the command "git fetch" will be run. When
-# <command> is "pull" the command "get pull" will be run.
+# When <command> is
+#   fetch - the command "git fetch" will be run.
+#   pull  - the command "git pull" will be run.
+#   ls-untracked  - the command will list all untracked, but not
+#           ignored, files.
+#   stage - the command "git add ." will be run.
+#   diff-state - the command "git diff --numstat" will be run.
 run_git_command() {
-  local current_dir
-  current_dir="$(pwd)"
   if (( $# < 2 )); then
     error "Too few arguments: $@"
   fi
   
-  if [[ "$1" == "fetch" || "$1" == "pull" ]]; then
-    if ! git -C "$2" "$1"; then
-      cd "${current_dir}"
-      error "Unable to execute Git command in directory: $2"
+  local run_flag
+  run_flag="false"
+  local git_command
+  case "$1" in
+    fetch)
+      run_flag="true"
+      git_command="fetch"
+      ;;
+    pull)
+      run_flag="true"
+      git_command="pull"
+      ;;
+    list-untracked)
+      run_flag="true"
+      git_command=("ls-files" "-o" "--exclude-standard")
+      ;;
+    diff-numstat)
+      run_flag="true"
+      git_command=("diff" "--numstat")
+      ;;
+    stage)
+      run_flag="true"
+      git_command=("add" ".")
+      ;;
+    *) error "Unsupported Git command: $1" ;;
+  esac
+  
+  if [[ "${run_flag}" == "true" ]]; then
+    if ! git -C "$2" "${git_command[@]}"; then
+      error "Unable to execute "${git_command[@]}" in directory: $2"
     fi
   else
     error "Unsupported Git command: $1"
@@ -50,14 +104,17 @@ main() {
   fetch_flag="false"
   local pull_flag
   pull_flag="false"
+  local stage_flag
+  stage_flag="false"
   local repo_dir
   repo_dir="$(pwd)"
   
-  while getopts :hfpd: opt; do
+  while getopts :hfpsd: opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       f) fetch_flag="true" ;;
       p) pull_flag="true" ;;
+      s) stage_flag="true" ;;
       d) repo_dir="${OPTARG}" ;;
       *) error "Unkown option: ${opt}" ;;
     esac
@@ -68,6 +125,22 @@ main() {
   fi
   if [[ "${pull_flag}" == "true" ]]; then
     run_git_command pull "${repo_dir}"
+  fi
+  if [[ "${stage_flag}" == "true" ]]; then
+    local untracked_files
+    untracked_files="$(run_git_command list-untracked "${repo_dir}")"
+    #echo "untracked files = ${untracked_files}" >&2
+    
+    local unstaged_changes
+    unstaged_changes="$(run_git_command diff-numstat "${repo_dir}")"
+    #echo "unstaged changes=${unstaged_changes}" >&2
+    
+    if [[ -n "${untracked_files}" ]] || [[ -n "${unstaged_changes}" ]]; then
+      #echo "adding changes..." >&2
+      run_git_command stage "${repo_dir}"
+      #echo "create time file..." >&2
+      make_new_time_file
+    fi
   fi
 }
 

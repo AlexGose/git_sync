@@ -113,3 +113,23 @@ teardown() {
   [ "$(git rev-parse master)" == "$(git rev-parse origin/master)" ]
   cd "${work_dir}"
 }
+
+@test "unstaged changes are staged with the \"-s\" option" {
+  echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
+  GIT_SYNC_TIME_DIR="/tmp" git_sync -s -d "${TEMP_TEST_DIR}/test1"
+  
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" ls-files -o --exclude-standard)" ]
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --numstat)" ]
+
+  time_file="/tmp/.git_sync_last_staged_time"
+
+  [ -f "${time_file}" ]
+  [ $(date "+%s") -ge  $(cat "${time_file}") ]
+  
+  # echo "# time now = $(date "+%s")" >&3
+  # echo "# time from file = $(cat "${time_file}")" >&3
+  local time_difference_seconds
+  time_difference_seconds="$(( $(date "+%s") - $(cat "${time_file}") ))"
+  
+  [ ${time_difference_seconds} -le 20 ]
+}
