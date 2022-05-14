@@ -29,12 +29,9 @@ run_git_command() {
   if (( $# < 2 )); then
     error "Too few arguments: $@"
   fi
-  if ! cd "$2"; then
-    error "Bad directory name: $2"
-  fi
   
   if [[ "$1" == "fetch" || "$1" == "pull" ]]; then
-    if ! git "$1"; then
+    if ! git -C "$2" "$1"; then
       cd "${current_dir}"
       error "Unable to execute Git command in directory: $2"
     fi
