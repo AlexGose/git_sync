@@ -1,8 +1,5 @@
 #!/bin/bash
 
-declare -rx GIT_SYNC_TIME_DIR
-declare -rx GIT_SYNC_TIME_FILE
-
 error() {
   echo "Error: $1" >&2
   exit 1
@@ -18,26 +15,6 @@ usage() {
   -s                    Stage any unstaged changes
   -d PATH               Path to the directory of the Git repository"
   echo "${usage_string}"
-}
-
-make_new_time_file() {
-  local time_dir
-  if [[ -z "${GIT_SYNC_TIME_DIR}" ]]; then
-    time_dir="."
-  else
-    time_dir="${GIT_SYNC_TIME_DIR}"
-  fi
-
-  local time_file
-  if [[ -z "${GIT_SYNC_TIME_FILE}" ]]; then
-    time_file=".git_sync_last_staged_time"
-  else
-    time_file="${GIT_SYNC_TIME_FILE}"
-  fi
-
-  if ! date "+%s" > "${time_dir}/${time_file}"; then
-    error "Unable to create or modify time file: ${time_file}"
-  fi
 }
 
 # Execute a Git command in the given repository
@@ -129,17 +106,15 @@ main() {
   if [[ "${stage_flag}" == "true" ]]; then
     local untracked_files
     untracked_files="$(run_git_command list-untracked "${repo_dir}")"
-    #echo "untracked files = ${untracked_files}" >&2
+    #echo "untracked files = ${untracked_files}"
     
     local unstaged_changes
     unstaged_changes="$(run_git_command diff-numstat "${repo_dir}")"
-    #echo "unstaged changes=${unstaged_changes}" >&2
+    #echo "unstaged changes=${unstaged_changes}"
     
+    # only change timestamp of .git/index if necessary
     if [[ -n "${untracked_files}" ]] || [[ -n "${unstaged_changes}" ]]; then
-      #echo "adding changes..." >&2
       run_git_command stage "${repo_dir}"
-      #echo "create time file..." >&2
-      make_new_time_file
     fi
   fi
 }
