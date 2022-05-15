@@ -47,14 +47,6 @@ run_git_command() {
       run_flag="true"
       git_command="pull"
       ;;
-    list-untracked)
-      run_flag="true"
-      git_command=("ls-files" "-o" "--exclude-standard")
-      ;;
-    diff-numstat)
-      run_flag="true"
-      git_command=("diff" "--numstat")
-      ;;
     stage)
       run_flag="true"
       git_command=("add" ".")
@@ -104,18 +96,7 @@ main() {
     run_git_command pull "${repo_dir}"
   fi
   if [[ "${stage_flag}" == "true" ]]; then
-    local untracked_files
-    untracked_files="$(run_git_command list-untracked "${repo_dir}")"
-    #echo "untracked files = ${untracked_files}"
-    
-    local unstaged_changes
-    unstaged_changes="$(run_git_command diff-numstat "${repo_dir}")"
-    #echo "unstaged changes=${unstaged_changes}"
-    
-    # only change timestamp of .git/index if necessary
-    if [[ -n "${untracked_files}" ]] || [[ -n "${unstaged_changes}" ]]; then
-      run_git_command stage "${repo_dir}"
-    fi
+    run_git_command stage "${repo_dir}"
   fi
 }
 
