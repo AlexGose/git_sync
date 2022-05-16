@@ -13,6 +13,8 @@ usage() {
   -f                    Fetch changes in the remote Git repository origin
   -p                    Pull changes from the remote Git repository origin
   -s                    Stage any unstaged changes
+  -c                    Commit any staged changes if the index has not been
+                        updated recently
   -d PATH               Path to the directory of the Git repository"
   echo "${usage_string}"
 }
@@ -20,16 +22,16 @@ usage() {
 # Execute a Git command in the given repository
 # Usage: run_git_command <command> <path to repository>
 # Inputs: 
-#     <command> - Git command ("fetch", "pull", "ls-untracked", etc.)
+#     <command> - Git command ("fetch", "pull", "stage", etc.)
 #     <path to repository> - path to the local Git repository
 # Modifies the local Git repository located at <path to repository>.
 # When <command> is
-#   fetch - the command "git fetch" will be run.
-#   pull  - the command "git pull" will be run.
-#   ls-untracked  - the command will list all untracked, but not
-#           ignored, files.
-#   stage - the command "git add ." will be run.
-#   diff-state - the command "git diff --numstat" will be run.
+#   fetch -  the command `git fetch` will be run.
+#   pull  -  the command `git pull` will be run.
+#   stage -  the command `git add .` will be run.
+#   commit - the command `git commit -m "Commit old staged changes"` will be
+#              run.
+#   diff -   the command `git diff --cached` will be run.
 run_git_command() {
   if (( $# < 2 )); then
     error "Too few arguments: $@"
@@ -51,6 +53,14 @@ run_git_command() {
       run_flag="true"
       git_command=("add" ".")
       ;;
+    commit)
+      run_flag="true"
+      git_command=("commit" "-m" "Commit old staged changes")
+      ;;
+    diff)
+      run_flag="true"
+      git_command=("diff" "--cached")
+      ;;
     *) error "Unsupported Git command: $1" ;;
   esac
   
@@ -60,6 +70,31 @@ run_git_command() {
     fi
   else
     error "Unsupported Git command: $1"
+  fi
+}
+
+# Commit any staged changes if enough time has elapsed
+# Usage: commit_if_ready <wait time in minutes> <path to repository>
+# Inputs:
+#   <wait time in minutes> - minimum elapsed time in minutes required since 
+#                            the last changes were staged
+#   <path to repository> -   directory of the local Git repository
+# Modifies the local Git repository if staged changes are present and 
+# sufficient time has elapsed.  If no staged changes, then do nothing.
+commit_if_ready() {
+  if (( $# < 2 )); then
+      error "Too few arguments: $@"
+  fi
+  if [[ -n "$(run_git_command diff "$2")" ]]; then # there are staged changes
+    local index_modify_time_seconds
+    index_modify_time_seconds="$(date +%s -r "$2/.git/index")"
+    
+    local elapsed_time_seconds
+    elapsed_time_seconds="$(( $(date +%s) - $index_modify_time_seconds ))"
+    
+    if (( $elapsed_time_seconds / $1 >= $wait_time_minutes )); then
+        run_git_command commit "$2"
+    fi
   fi
 }
 
@@ -75,16 +110,26 @@ main() {
   pull_flag="false"
   local stage_flag
   stage_flag="false"
+  local commit_flag
+  commit_flag="false"
   local repo_dir
   repo_dir="$(pwd)"
+  local wait_time_minutes
+  wait_time_minutes=20
   
-  while getopts :hfpsd: opt; do
+  while getopts :hfpscd: opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       f) fetch_flag="true" ;;
       p) pull_flag="true" ;;
       s) stage_flag="true" ;;
-      d) repo_dir="${OPTARG}" ;;
+      d)
+        repo_dir="${OPTARG}"
+        if ! [[ -d "${repo_dir}" ]]; then
+          error "Not a valid directory: ${repo_dir}"
+        fi
+        ;;
+      c) commit_flag="true" ;;
       *) error "Unkown option: ${opt}" ;;
     esac
   done
@@ -97,6 +142,9 @@ main() {
   fi
   if [[ "${stage_flag}" == "true" ]]; then
     run_git_command stage "${repo_dir}"
+  fi
+  if [[ "${commit_flag}" == "true" ]]; then
+    commit_if_ready "${wait_time_minutes}" "${repo_dir}"
   fi
 }
 

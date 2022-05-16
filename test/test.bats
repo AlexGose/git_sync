@@ -119,11 +119,34 @@ teardown() {
   [ -n "$(git -C "${TEMP_TEST_DIR}/test1" ls-files -o --exclude-standard)" ]
  
   echo "a replacement line" > "${TEMP_TEST_DIR}/test1/test_file.txt"
-  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --numstat)" ]
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff)" ]
 
   run git_sync -s -d "${TEMP_TEST_DIR}/test1"
   assert_success
   
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" ls-files -o --exclude-standard)" ]
-  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --numstat)" ]
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff)" ]
+}
+
+@test "staged changes are committed with the \"-c\" option" {
+  echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
+  git -C "${TEMP_TEST_DIR}/test1" add "${TEMP_TEST_DIR}/test1"
+  touch -d "21 minutes ago" "${TEMP_TEST_DIR}/test1/.git/index"
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+  
+  run git_sync -c -d "${TEMP_TEST_DIR}/test1"
+  assert_success
+
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+}
+
+@test "staged changes are not committed without sufficient wait" {
+  echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
+  git -C "${TEMP_TEST_DIR}/test1" add "${TEMP_TEST_DIR}/test1"
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+  
+  run git_sync -c -d "${TEMP_TEST_DIR}/test1"
+  assert_success
+  
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 }
