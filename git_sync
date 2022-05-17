@@ -14,8 +14,10 @@ usage() {
   -p                    Pull changes from the remote Git repository origin
   -s                    Stage any unstaged changes
   -c                    Commit any staged changes if the index has not been
-                        updated recently
-  -d PATH               Path to the directory of the Git repository"
+                        updated after a sufficient wait time
+  -d PATH               Path to the directory of the Git repository
+  -t TIME               Wait time in minutes since the last staged change
+                        before any new commit is made (default 20 minutes)"
   echo "${usage_string}"
 }
 
@@ -90,9 +92,9 @@ commit_if_ready() {
     index_modify_time_seconds="$(date +%s -r "$2/.git/index")"
     
     local elapsed_time_seconds
-    elapsed_time_seconds="$(( $(date +%s) - $index_modify_time_seconds ))"
+    elapsed_time_seconds="$(( $(date +%s) - index_modify_time_seconds ))"
     
-    if (( $elapsed_time_seconds / $1 >= $wait_time_minutes )); then
+    if (( elapsed_time_seconds / $1 >= wait_time_minutes )); then
         run_git_command commit "$2"
     fi
   fi
@@ -117,7 +119,7 @@ main() {
   local wait_time_minutes
   wait_time_minutes=20
   
-  while getopts :hfpscd: opt; do
+  while getopts :hfpscd:t: opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       f) fetch_flag="true" ;;
@@ -130,6 +132,13 @@ main() {
         fi
         ;;
       c) commit_flag="true" ;;
+      t)
+        if [[ "${OPTARG}" =~ ^[1-9][0-9]*$ ]]; then
+          wait_time_minutes="${OPTARG}"
+        else
+          error "Not a valid wait time: ${OPTARG}"
+        fi
+        ;;
       *) error "Unkown option: ${opt}" ;;
     esac
   done

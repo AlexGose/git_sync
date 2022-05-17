@@ -140,12 +140,36 @@ teardown() {
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 }
 
-@test "staged changes are not committed without sufficient wait" {
+@test "staged changes not committed before wait time" {
   echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
   git -C "${TEMP_TEST_DIR}/test1" add "${TEMP_TEST_DIR}/test1"
   [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
   
   run git_sync -c -d "${TEMP_TEST_DIR}/test1"
+  assert_success
+  
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+}
+
+@test "staged changes committed after user supplied wait time" {
+  echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
+  git -C "${TEMP_TEST_DIR}/test1" add "${TEMP_TEST_DIR}/test1"
+  touch -d "11 minutes ago" "${TEMP_TEST_DIR}/test1/.git/index"
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+  
+  run git_sync -c -d "${TEMP_TEST_DIR}/test1" -t 10
+  assert_success
+
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+
+} 
+
+@test "staged changes not committed before user supplied wait time" {
+  echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
+  git -C "${TEMP_TEST_DIR}/test1" add "${TEMP_TEST_DIR}/test1"
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+  
+  run git_sync -c -d "${TEMP_TEST_DIR}/test1" -t 1
   assert_success
   
   [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
