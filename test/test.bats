@@ -174,3 +174,19 @@ teardown() {
   
   [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 }
+
+@test "staged changes are committed and pushed with \"-C\" option" {
+  echo "hello world" > "${TEMP_TEST_DIR}/test1/my_new_file.txt"
+  git -C "${TEMP_TEST_DIR}/test1" add "${TEMP_TEST_DIR}/test1"
+  touch -d "21 minutes ago" "${TEMP_TEST_DIR}/test1/.git/index"
+  [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+  
+  run git_sync -C -d "${TEMP_TEST_DIR}/test1"
+  assert_success
+  
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
+  #echo "# $(git -C "${TEMP_TEST_DIR}/test1" status)" >&3
+  
+  #echo "# $(git -C "${TEMP_TEST_DIR}/test1" diff origin/master master)" >&3
+  [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff origin/master master)" ]
+}

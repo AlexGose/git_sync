@@ -15,6 +15,8 @@ usage() {
   -s                    Stage any unstaged changes
   -c                    Commit any staged changes if the index has not been
                         updated after a sufficient wait time
+  -C                    Commit and push any staged changes if the index has
+                        not been updated after sufficient wait time
   -d PATH               Path to the directory of the Git repository
   -t TIME               Wait time in minutes since the last staged change
                         before any new commit is made (default 20 minutes)"
@@ -34,6 +36,7 @@ usage() {
 #   commit - the command `git commit -m "Commit old staged changes"` will be
 #              run.
 #   diff -   the command `git diff --cached` will be run.
+#   push -   the command `git push` will be run.
 run_git_command() {
   if (( $# < 2 )); then
     error "Too few arguments: $@"
@@ -63,6 +66,10 @@ run_git_command() {
       run_flag="true"
       git_command=("diff" "--cached")
       ;;
+    push)
+      run_flag="true"
+      git_command="push"
+      ;;
     *) error "Unsupported Git command: $1" ;;
   esac
   
@@ -76,26 +83,31 @@ run_git_command() {
 }
 
 # Commit any staged changes if enough time has elapsed
-# Usage: commit_if_ready <wait time in minutes> <path to repository>
+# Usage: commit_if_ready <wait time in minutes> <path> <push flag>
 # Inputs:
 #   <wait time in minutes> - minimum elapsed time in minutes required since 
 #                            the last changes were staged
-#   <path to repository> -   directory of the local Git repository
+#   <path> -      directory of the local Git repository
+#   <push flag> - if equal to "true", then push after committing
 # Modifies the local Git repository if staged changes are present and 
 # sufficient time has elapsed.  If no staged changes, then do nothing.
 commit_if_ready() {
-  if (( $# < 2 )); then
+  if (( $# < 3 )); then
       error "Too few arguments: $@"
   fi
+  
   if [[ -n "$(run_git_command diff "$2")" ]]; then # there are staged changes
     local index_modify_time_seconds
-    index_modify_time_seconds="$(date +%s -r "$2/.git/index")"
+    index_modified_time_seconds="$(date +%s -r "$2/.git/index")"
     
     local elapsed_time_seconds
-    elapsed_time_seconds="$(( $(date +%s) - index_modify_time_seconds ))"
+    elapsed_time_seconds="$(( $(date +%s) - index_modified_time_seconds ))"
     
     if (( elapsed_time_seconds / $1 >= wait_time_minutes )); then
-        run_git_command commit "$2"
+      run_git_command commit "$2"
+      if [[ "$3" == "true" ]]; then
+        run_git_command push "$2"
+      fi
     fi
   fi
 }
@@ -116,10 +128,12 @@ main() {
   commit_flag="false"
   local repo_dir
   repo_dir="$(pwd)"
+  local push_flag
+  push_flag="false"
   local wait_time_minutes
   wait_time_minutes=20
   
-  while getopts :hfpscd:t: opt; do
+  while getopts :hfpscCd:t: opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       f) fetch_flag="true" ;;
@@ -132,6 +146,10 @@ main() {
         fi
         ;;
       c) commit_flag="true" ;;
+      C)
+        commit_flag="true"
+        push_flag="true"
+        ;;
       t)
         if [[ "${OPTARG}" =~ ^[1-9][0-9]*$ ]]; then
           wait_time_minutes="${OPTARG}"
@@ -153,7 +171,7 @@ main() {
     run_git_command stage "${repo_dir}"
   fi
   if [[ "${commit_flag}" == "true" ]]; then
-    commit_if_ready "${wait_time_minutes}" "${repo_dir}"
+    commit_if_ready "${wait_time_minutes}" "${repo_dir}" "${push_flag}"
   fi
 }
 
