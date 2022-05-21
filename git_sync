@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# Git-based utility for syncronizing files on multiple machines
 
 error() {
   echo "Error: $1" >&2
