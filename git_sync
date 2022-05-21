@@ -62,7 +62,7 @@ run_git_command() {
       ;;
     commit)
       run_flag="true"
-      git_command=("commit" "-m" "'Commit old staged changes'")
+      git_command=("commit" "-m" "Commit old staged changes")
       ;;
     diff)
       run_flag="true"
@@ -76,7 +76,7 @@ run_git_command() {
   esac
   
   if [[ "${run_flag}" == "true" ]]; then
-    if ! git -C "$2" "${git_command[@]}" 2>&1 >/dev/null; then
+    if ! git -C "$2" "${git_command[@]}"; then
       error "Unable to execute "${git_command[@]}" in directory: $2"
     fi
   else
