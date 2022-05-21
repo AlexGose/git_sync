@@ -39,6 +39,7 @@ usage() {
 #              run.
 #   diff -   the command `git diff --cached` will be run.
 #   push -   the command `git push` will be run.
+# Except for "diff", all output from Git will be suppressed
 run_git_command() {
   if (( $# < 2 )); then
     error "Too few arguments: $@"
@@ -50,11 +51,11 @@ run_git_command() {
   case "$1" in
     fetch)
       run_flag="true"
-      git_command="fetch"
+      git_command=("fetch" "-q")
       ;;
     pull)
       run_flag="true"
-      git_command="pull"
+      git_command=("pull" "-q")
       ;;
     stage)
       run_flag="true"
@@ -62,7 +63,7 @@ run_git_command() {
       ;;
     commit)
       run_flag="true"
-      git_command=("commit" "-m" "Commit old staged changes")
+      git_command=("commit" "-q" "-m" "Commit old staged changes")
       ;;
     diff)
       run_flag="true"
@@ -70,15 +71,18 @@ run_git_command() {
       ;;
     push)
       run_flag="true"
-      git_command="push"
+      git_command=("push" "-q")
       ;;
     *) error "Unsupported Git command: $1" ;;
   esac
   
   if [[ "${run_flag}" == "true" ]]; then
+    #echo "# directory = $2"
+    #echo "# git_command = ${git_command[@]}"
     if ! git -C "$2" "${git_command[@]}"; then
       error "Unable to execute "${git_command[@]}" in directory: $2"
     fi
+    #echo "# $(git -C "$2" log -1)"
   else
     error "Unsupported Git command: $1"
   fi

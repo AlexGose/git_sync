@@ -76,6 +76,8 @@ teardown() {
   cd "${TEMP_TEST_DIR}/test2"
   run git_sync -f
   assert_success
+
+  #git_sync -f 2>&1 >&3
   [ "$(git rev-parse master)" != "$(git rev-parse origin/master)" ]
   cd "${work_dir}"
 }
@@ -83,6 +85,8 @@ teardown() {
 @test "master branch behind origin after fetch with \"-d\" option" {
   run git_sync -f -d "${TEMP_TEST_DIR}/test2"
   assert_success
+
+  #git_sync -f -d "${TEMP_TEST_DIR}/test2" 2>&1 >&3
   
   local work_dir
   work_dir="${PWD}"
@@ -103,6 +107,7 @@ teardown() {
   #echo "# hash_remote=${hash_remote}" >&3
   run git_sync -p
   assert_success
+  #git_sync -p 2>&1 >&3
   #echo "# hash_local=$(git rev-parse master)" >&3
   #echo "# hash_remote=$(git rev-parse origin/master)" >&3
 
@@ -123,6 +128,7 @@ teardown() {
 
   run git_sync -s -d "${TEMP_TEST_DIR}/test1"
   assert_success
+  #git_sync -s -d "${TEMP_TEST_DIR}/test1" 2>&1 >&3
   
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" ls-files -o --exclude-standard)" ]
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff)" ]
@@ -137,6 +143,11 @@ teardown() {
   run git_sync -c -d "${TEMP_TEST_DIR}/test1"
   assert_success
 
+  #git -C "${TEMP_TEST_DIR}/test1" commit -m "Commit old staged changes" 2>&1 >&3
+  
+  #git_sync -c -d "${TEMP_TEST_DIR}/test1" 2>&1 >&3
+
+  #echo "# $(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" >&3
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 }
 
@@ -147,6 +158,7 @@ teardown() {
   
   run git_sync -c -d "${TEMP_TEST_DIR}/test1"
   assert_success
+  #git_sync -c -d "${TEMP_TEST_DIR}/test1" 2>&1 >&3
   
   [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 }
@@ -159,6 +171,7 @@ teardown() {
   
   run git_sync -c -d "${TEMP_TEST_DIR}/test1" -t 10
   assert_success
+  #git_sync -c -d "${TEMP_TEST_DIR}/test1" -t 10 2>&1 >&3
 
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 
@@ -171,6 +184,7 @@ teardown() {
   
   run git_sync -c -d "${TEMP_TEST_DIR}/test1" -t 1
   assert_success
+  #git_sync -c -d "${TEMP_TEST_DIR}/test1" -t 1 2>&1 >&3
   
   [ -n "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
 }
@@ -183,6 +197,7 @@ teardown() {
   
   run git_sync -C -d "${TEMP_TEST_DIR}/test1"
   assert_success
+  #git_sync -C -d "${TEMP_TEST_DIR}/test1" 2>&1 >&3
   
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff --cached)" ]
   #echo "# $(git -C "${TEMP_TEST_DIR}/test1" status)" >&3
