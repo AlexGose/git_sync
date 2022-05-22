@@ -42,7 +42,7 @@ usage() {
 # Except for "diff", all output from Git will be suppressed
 run_git_command() {
   if (( $# < 2 )); then
-    error "Too few arguments: $@"
+    error "Too few arguments: $*"
   fi
   
   local run_flag
@@ -80,7 +80,7 @@ run_git_command() {
     #echo "# directory = $2"
     #echo "# git_command = ${git_command[@]}"
     if ! git -C "$2" "${git_command[@]}"; then
-      error "Unable to execute "${git_command[@]}" in directory: $2"
+      error "Unable to execute ${git_command[*]} in directory: $2"
     fi
     #echo "# $(git -C "$2" log -1)"
   else
@@ -99,11 +99,11 @@ run_git_command() {
 # sufficient time has elapsed.  If no staged changes, then do nothing.
 commit_if_ready() {
   if (( $# < 3 )); then
-      error "Too few arguments: $@"
+      error "Too few arguments: $*"
   fi
   
   if [[ -n "$(run_git_command diff "$2")" ]]; then # there are staged changes
-    local index_modify_time_seconds
+    local index_modified_time_seconds
     index_modified_time_seconds="$(date +%s -r "$2/.git/index")"
     
     local elapsed_time_seconds
