@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Git-based utility for syncronizing files on multiple machines
+# Git-based utility for synchronizing files on multiple machines
 
 error() {
   echo "Error: $1" >&2
@@ -28,18 +28,12 @@ usage() {
 # Execute a Git command in the given repository
 # Usage: run_git_command <command> <path to repository>
 # Inputs: 
-#     <command> - Git command ("fetch", "pull", "stage", etc.)
+#     <command> - Git command or alias ("fetch", "pull", "stage", etc.)
 #     <path to repository> - path to the local Git repository
 # Modifies the local Git repository located at <path to repository>.
-# When <command> is
-#   fetch -  the command `git fetch` will be run.
-#   pull  -  the command `git pull` will be run.
-#   stage -  the command `git add .` will be run.
-#   commit - the command `git commit -m "Commit old staged changes"` will be
-#              run.
-#   diff -   the command `git diff --cached` will be run.
-#   push -   the command `git push` will be run.
-# Except for "diff", all output from Git will be suppressed
+# Except when <command> is "diff", all Git output to STDOUT will be suppressed
+# Output to STDERR occurs for fewer than 2 arguments, unsupported <command>
+# strings, and unsuccessful Git command execution.
 run_git_command() {
   if (( $# < 2 )); then
     error "Too few arguments: $*"
@@ -94,9 +88,12 @@ run_git_command() {
 #   <wait time in minutes> - minimum elapsed time in minutes required since 
 #                            the last changes were staged
 #   <path> -      directory of the local Git repository
-#   <push flag> - if equal to "true", then push after committing
+#   <push flag> - if equal to "true", then push after committing.  Otherwise,
+#                 do not push
 # Modifies the local Git repository if staged changes are present and 
 # sufficient time has elapsed.  If no staged changes, then do nothing.
+# Output to STDERR occurs for fewer than 3 arguments or unsuccessful
+# execution of Git.
 commit_if_ready() {
   if (( $# < 3 )); then
       error "Too few arguments: $*"
