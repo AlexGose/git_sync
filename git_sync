@@ -109,7 +109,7 @@ commit_if_ready() {
     local elapsed_time_seconds
     elapsed_time_seconds="$(( $(date +%s) - index_modified_time_seconds ))"
     
-    if (( elapsed_time_seconds / $1 >= wait_time_minutes )); then
+    if (( elapsed_time_seconds / 60 >= $1 )); then
       run_git_command commit "$2"
       if [[ "$3" == "true" ]]; then
         run_git_command push "$2"
