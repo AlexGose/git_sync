@@ -49,9 +49,7 @@ setup() {
 }
 
 teardown() {
-  rm -rf "${TEMP_TEST_DIR}/test1"
-  rm -rf "${TEMP_TEST_DIR}/test2"
-  rm -rf "${TEMP_TEST_DIR}/test.git"
+  rm -rf "${TEMP_TEST_DIR}"
 }
 
 @test "print usage and fail when run without options" {
