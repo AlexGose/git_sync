@@ -145,6 +145,10 @@ main() {
         repo_dir="${OPTARG}"
         if ! [[ -d "${repo_dir}" ]]; then
           error "Not a valid directory: ${repo_dir}"
+        else
+          if ! git -C "${repo_dir}" rev-parse HEAD >/dev/null 2>&1; then
+            error "Not a valid Git working tree: ${repo_dir}"
+          fi
         fi
         ;;
       c) commit_flag="true" ;;

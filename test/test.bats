@@ -203,3 +203,15 @@ teardown() {
   #echo "# $(git -C "${TEMP_TEST_DIR}/test1" diff origin/master master)" >&3
   [ -z "$(git -C "${TEMP_TEST_DIR}/test1" diff origin/master master)" ]
 }
+
+@test "invalid directory prints error message and fails" {
+  run git_sync -f -d "${TEMP_TEST_DIR}/foo"
+  assert_failure
+  assert_output --partial "Not a valid directory"
+}
+
+@test "user supplied directory is not a Git working tree" {
+  run git_sync -f -d "${TEMP_TEST_DIR}"
+  assert_failure
+  assert_output --partial "Not a valid Git working tree"
+}
