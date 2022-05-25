@@ -67,7 +67,6 @@ run_git_command() {
       run_flag="true"
       git_command=("push" "-q")
       ;;
-    *) error "Unsupported Git command: $1" ;;
   esac
   
   if [[ "${run_flag}" == "true" ]]; then
