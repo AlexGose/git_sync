@@ -36,7 +36,7 @@ usage() {
 # strings, and unsuccessful Git command execution.
 run_git_command() {
   if (( $# < 2 )); then
-    error "Too few arguments: $*"
+    error "${FUNCNAME[0]}: Too few arguments: $*"
   fi
   
   local run_flag
@@ -73,11 +73,11 @@ run_git_command() {
     #echo "# directory = $2"
     #echo "# git_command = ${git_command[@]}"
     if ! git -C "$2" "${git_command[@]}"; then
-      error "Unable to execute ${git_command[*]} in directory: $2"
+      error "${FUNCNAME[0]}: Unable to execute ${git_command[*]} in directory: $2"
     fi
     #echo "# $(git -C "$2" log -1)"
   else
-    error "Unsupported Git command: $1"
+    error "${FUNCNAME[0]}: Unsupported Git command: $1"
   fi
 }
 
@@ -95,7 +95,7 @@ run_git_command() {
 # execution of Git.
 commit_if_ready() {
   if (( $# < 3 )); then
-      error "Too few arguments: $*"
+      error "${FUNCNAME[0]}: Too few arguments: $*"
   fi
   
   if [[ -n "$(run_git_command diff "$2")" ]]; then # there are staged changes
@@ -117,7 +117,7 @@ commit_if_ready() {
 main() {
   if (( $# == 0 )); then
       usage
-      error "git_sync requires at least one option"
+      error "${FUNCNAME[0]}: git_sync requires at least one option"
   fi
   
   local fetch_flag
@@ -144,10 +144,10 @@ main() {
       d)
         repo_dir="${OPTARG}"
         if ! [[ -d "${repo_dir}" ]]; then
-          error "Not a valid directory: ${repo_dir}"
+          error "${FUNCNAME[0]}: Not a valid directory: ${repo_dir}"
         else
           if ! git -C "${repo_dir}" rev-parse HEAD >/dev/null 2>&1; then
-            error "Not a valid Git working tree: ${repo_dir}"
+            error "${FUNCNAME[0]}: Not a valid Git working tree: ${repo_dir}"
           fi
         fi
         ;;
@@ -160,10 +160,10 @@ main() {
         if [[ "${OPTARG}" =~ ^[1-9][0-9]*$ ]]; then
           wait_time_minutes="${OPTARG}"
         else
-          error "Not a valid wait time: ${OPTARG}"
+          error "${FUNCNAME[0]}: Not a valid wait time: ${OPTARG}"
         fi
         ;;
-      *) error "Unkown option: ${opt}" ;;
+      *) error "${FUNCNAME[0]}: Unknown option: ${opt}" ;;
     esac
   done
   
