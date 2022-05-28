@@ -1,17 +1,17 @@
-## What is git_sync?
+# What is git_sync?
 
-A Git-based Bash script to synchronize your files on Linux machines. If you have (Git)[https://git-scm.com] and (Bash)[https://www.gnu.org/software/bash/] installed, you probably do not need to install any additional software.  Just download one script file.
+A Git-based Bash script to synchronize your files on Linux machines. If you have [Git](https://git-scm.com) and [Bash](https://www.gnu.org/software/bash/) installed, you probably do not need to install any additional software.  Just download one script file.
 
-## Features
+# Features
 
-1. Written in modern Bash
-2. Strives to adhere to the (Google Shell Style Guide)[https://google.github.io/styleguide/shellguide.html]
-3. Includes tests written in Bash using (bats-core)[https://github.com/bats-core/bats-core]
-4. User-defined wait time to avoid pushing too many commits
+* Written in modern Bash
+* Strives to adhere to the [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html)
+* Includes tests written in Bash using [bats-core](https://github.com/bats-core/bats-core)
+* User-defined wait time to avoid pushing too many commits
 
-## Installation 
+# Installation 
 
-Download the (git_sync)[git_sync] file from this repository.
+Download the [git_sync](git_sync) file from this repository.
 
 Alternatively, clone this repository:
 
@@ -26,9 +26,9 @@ Make the script file executable:
 chmod a+x git_sync
 ```
 
-## Usage
+# Usage
 
-See usage information from running the script with the "-h" option:
+See usage information by running the script with the `-h` option:
 
 ```
 ./git_sync -h
@@ -50,16 +50,22 @@ Add the following line to the end of the file to run git_sync every hour to pull
 
 ## Tests
 
-You can run the tests if you cloned the repository.  Be sure to install the submodules:
+You can run the tests if you cloned the repository.  Be sure to install the submodules first:
 
 ```
 git submodule init
 git submodule update
 ```
 
+Run the tests:
+
+```
+test/bats/bin/bats test/
+```
+
 ## Docker
 
-If you have Docker installed, then build the Docker image using the Dockerfile in the cloned repository:
+If you have [Docker](https://docker.com) installed, then build the Docker image using the [Dockerfile](Dockerfile) in the cloned repository:
 
 ```
 docker build -t gitsynctest .
@@ -71,14 +77,14 @@ Run the tests in the container:
 docker run -it --rm -v "${PWD}:/code" --name gitsynctest gitsynctest
 ```
 
-## Authors
+# Authors
 
 Alexander H Gose
 
-## License
+# License
 
 MIT License.  See the [LICENSE](LICENSE) file.
 
-## Acknowledgements
+# Acknowledgements
 
-Thank you to all those who contributed to the projects mentioned in this [file](README.md).
+Thank you to all those who contributed to the projects mentioned here.
