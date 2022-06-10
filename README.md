@@ -16,7 +16,7 @@ Download the [git_sync](git_sync) file from this repository.
 Alternatively, clone this repository:
 
 ```
-git clone https://github.io/alexgose/git_sync
+git clone https://github.com/AlexGose/git_sync.git
 cd git_sync
 ```
 
