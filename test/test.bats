@@ -215,3 +215,8 @@ teardown() {
   assert_failure
   assert_output --partial "Not a valid Git working tree"
 }
+
+@test "README file usage information matches help from script" {
+  run cat README.md
+  assert_output --partial "$(git_sync -h)"
+}

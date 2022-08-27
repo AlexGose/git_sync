@@ -28,10 +28,28 @@ chmod a+x git_sync
 
 # Usage
 
-See usage information by running the script with the `-h` option:
+View the usage information:
 
 ```
 ./git_sync -h
+```
+
+Output to the console window:
+
+```console
+Usage: git_sync OPTIONS
+  OPTIONS
+  -h                    Display this help message
+  -f                    Fetch changes in the remote Git repository origin
+  -p                    Pull changes from the remote Git repository origin
+  -s                    Stage any unstaged changes
+  -c                    Commit any staged changes if the index has not been
+                        updated after a sufficient wait time
+  -C                    Commit and push any staged changes if the index has
+                        not been updated after sufficient wait time
+  -d PATH               Path to the directory of the Git repository
+  -t TIME               Wait time in minutes since the last staged change
+                        before any new commit is made (default 20 minutes)
 ```
 
 ## Cron Job
